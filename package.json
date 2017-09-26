@@ -1,0 +1,42 @@
+{
+  "name": "rncq",
+  "version": "2017.9.26",
+  "author": "Claude SIMON (http://q37.info/contact/)",
+  "description": "Node.js addon template",
+  "main": "RNCq.js",
+  "engines": {
+    "node": ">=4"
+  },
+  "binary": {
+    "module_name": "rncqnjs",
+    "module_path": ".",
+    "remote_path": "./epeios-q37/rncq-node/releases/download/v20170926/",
+    "package_name": "{module_name}-v20170926-{platform}-{arch}.tar.gz",
+    "host": "https://github.com"
+  },
+  "dependencies": {
+    "njsq": "<=2017.9.26",
+    "node-pre-gyp": "0.6.x"
+  },
+  "devDependencies": {
+    "aws-sdk": "2.x"
+  },
+  "scripts": {
+    "preinstall": "npm install node-pre-gyp",
+    "install": "node-pre-gyp install --fallback-to-build",
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/epeios-q37/rncq-node.git"
+  },
+  "keywords": [
+    "addon","native","C++","njsq","template","q37","epeios"
+  ],
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/epeios-q37/rncq-node/issues"
+  },
+  "homepage": "https://github.com/epeios-q37/rncq-node#readme",
+  "runkitExampleFilename": "runkit.js"
+}
