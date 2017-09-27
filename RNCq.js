@@ -44,5 +44,6 @@ module.exports = njsq;
 // End of generic part.
 
 module.exports.returnArgument = (text) => { return njsq._wrapper(0, text) };
-module.exports.evaluate = ( expression, callback ) => { njsq._wrapper( 1, expression, callback ); };
+module.exports.evaluateALG = ( expression, callback ) => { njsq._wrapper( 1, expression, callback ); };
+module.exports.evaluateRPN = (expression, callback) => { njsq._wrapper( 2, expression, callback); };
 

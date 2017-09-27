@@ -19,16 +19,25 @@
 // Once installed ('npm install rncq'), launch 'npm explore rncq -- node test.js'.
 
 const rncq = require('./RNCq.js');
-var expr = "784512.8456120*8456120.48651320-84651320.896451320/84651230.89645120*86451320.7984651230/84651320.789465120";
+const exprALG = "784512.8456120 * 8456120.48651320 - 84651320.896451320 / 84651230.89645120 * 86451320.798465123 / 84651320.789465120 * 12365478985245600000000";
+const exprRPN = "784512.8456120 8456120.48651320 * 84651320.896451320 - 84651230.89645120 / 86451320.798465123 * 84651320.789465120 / 12365478985245600000000 *";
+var expr = process.argv[2];
 
 console.log( rncq.componentInfo() ) ;
-console.log(rncq.wrapperInfo());
+console.log( rncq.wrapperInfo() );
 
 const arg = process.argv[2];
 
-if (arg != undefined)
-    expr = arg;
-
 process.stdout.write(rncq.returnArgument("Text from JS file") + '\n');
 
-rncq.evaluate( expr, (result) => process.stdout.write(result));
+// 'true' : 'expr' must be algebraic ('1 + 2 * 3').
+// 'false' : 'expr' must be RPN ('1 2 + 3 *').
+if ( false ) {
+    if (expr == undefined)
+        expr = exprALG;
+    rncq.evaluateALG(expr, (result) => process.stdout.write(result));
+} else {
+    if (expr == undefined)
+        expr = exprRPN;
+    rncq.evaluateRPN(expr, (result) => process.stdout.write(result));
+}

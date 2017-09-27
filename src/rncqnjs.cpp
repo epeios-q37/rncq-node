@@ -22,6 +22,7 @@
 #include "registry.h"
 
 #include "rncalg.h"
+#include "rncrpn.h"
 
 #include "sclmisc.h"
 #include "sclnjs.h"
@@ -50,12 +51,13 @@ namespace {
 		qRE
 	}
 
-	namespace algebraic_ {
+	namespace {
 		namespace {
 			struct rRack_ {
 			public:
 				str::wString Expression, Result;
 				qRMV( sclnjs::rCallback, C, Callback );
+				bso::sBool RPN;	// if 'true' 'Expression' is RPN ('ab+'), otherwise is algebraic ('a+b').
 				void reset( bso::sBool P = true )
 				{
 					if ( P ) {
@@ -66,16 +68,18 @@ namespace {
 					tol::reset( P, Callback, Expression );
 				}
 				qCDTOR( rRack_ );
-				void Init( void )
+				void Init( bso::sBool RPN )
 				{
 					Expression.Init();
 					Result.Init();
 					Callback = NULL;
+					this->RPN = RPN;
 				}
 			};
 
 			bso::sBool Evaluate_(
 				xtf::sIFlow &XFlow,
+				bso::sBool RPN,
 				txf::sOFlow &OFlow )
 			{
 				bso::sBool Success = false;
@@ -84,7 +88,12 @@ namespace {
 			qRB
 				Number.Init();
 
-				if ( ( Success = rncalg::Evaluate<mthrtn::dRational, mthrtn::wRational, rncrtn::dRationals, rncrtn::wRationals>( XFlow, Number ) ) ) {
+			if ( RPN )
+				Success = rncrpn::Evaluate<mthrtn::dRational, mthrtn::wRational, rncrtn::dRationals, rncrtn::wRationals>( XFlow, Number );
+			else
+				Success = rncalg::Evaluate<mthrtn::dRational, mthrtn::wRational, rncrtn::dRationals, rncrtn::wRationals>( XFlow, Number );
+
+				if ( Success ) {
 					Number.Simplify();
 
 					OFlow << Number.N << " / " << Number.D;
@@ -97,6 +106,7 @@ namespace {
 
 			bso::sBool Evaluate_(
 				xtf::sIFlow &XFlow,
+				bso::sBool RPN,
 				str::dString &Result )
 			{
 				bso::sBool Success = false;
@@ -105,7 +115,7 @@ namespace {
 			qRB
 				OFlow.Init( Result );
 
-				Success = Evaluate_( XFlow, OFlow );
+				Success = Evaluate_( XFlow, RPN, OFlow );
 			qRR
 			qRT
 			qRE
@@ -114,6 +124,7 @@ namespace {
 
 			bso::sBool Evaluate_( 
 				str::dString &Expression,
+				bso::sBool RPN,
 				str::dString &Result )
 			{
 				bso::sBool Success = false;
@@ -124,7 +135,7 @@ namespace {
 				IFlow.Init( Expression );
 				XFlow.Init( IFlow, utf::f_Guess );
 
-				Success = Evaluate_( XFlow, Result );
+				Success = Evaluate_( XFlow, RPN, Result );
 			qRR
 			qRT
 			qRE
@@ -140,7 +151,7 @@ namespace {
 			protected:
 				void SCLNJSWork( void ) override
 				{
-					if ( !Evaluate_( Expression, Result ) )
+					if ( !Evaluate_( Expression, RPN, Result ) )
 						sclmisc::GetBaseTranslation( "BadExpression", Result );
 				}
 				sclnjs::eBehavior SCLNJSAfter( void ) override
@@ -156,35 +167,47 @@ namespace {
 				}
 				qCVDTOR( rRackAsyncCallback_ );
 			};
+
+			void Evaluate_(
+				sclnjs::sCaller &Caller,
+				bso::sBool RPN )
+			{
+			qRH
+				rRackAsyncCallback_ *Rack = NULL;
+			qRB
+				Rack = new rRackAsyncCallback_;
+
+				if ( Rack == NULL )
+					qRGnr();
+
+				Rack->Init( RPN );
+
+				Rack->Callback = new sclnjs::rCallback;
+
+				if ( Rack->Callback == NULL )
+					qRGnr();
+
+				Rack->Callback->Init();
+
+				Caller.GetArgument( Rack->Expression, *Rack->Callback );
+
+				sclnjs::Launch( *Rack );
+			qRR
+				if ( Rack != NULL )	// Deletes also 'Callback'.
+					delete Rack;
+			qRT
+			qRE
+			}
 		}
 
-		SCLNJS_F( Evaluate_ )
+		SCLNJS_F( EvaluateALG_ )
 		{
-		qRH
-			rRackAsyncCallback_ *Rack = NULL;
-		qRB
-			Rack = new rRackAsyncCallback_;
+			Evaluate_( Caller, false );
+		}
 
-			if ( Rack == NULL )
-				qRGnr();
-
-			Rack->Init();
-
-			Rack->Callback = new sclnjs::rCallback;
-
-			if ( Rack->Callback == NULL )
-				qRGnr();
-
-			Rack->Callback->Init();
-
-			Caller.GetArgument( Rack->Expression, *Rack->Callback );
-
-			sclnjs::Launch( *Rack );
-		qRR
-			if ( Rack != NULL )	// Deletes also 'Callback'.
-				delete Rack;
-		qRT
-		qRE
+		SCLNJS_F( EvaluateRPN_ )
+		{
+			Evaluate_( Caller, true );
 		}
 	}
 }
@@ -192,7 +215,7 @@ namespace {
 void sclnjs::SCLNJSRegister( sclnjs::sRegistrar &Registrar )
 {
 	Registrar.Register( ReturnArgument_ );
-	Registrar.Register( algebraic_::Evaluate_ );
+	Registrar.Register( EvaluateALG_, EvaluateRPN_ );
 }
 
 const char *sclmisc::SCLMISCTargetName = NAME_LC;
