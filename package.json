@@ -1,6 +1,6 @@
 {
   "name": "rncq",
-  "version": "2017.9.27",
+  "version": "2018.1.6",
   "author": "Claude SIMON (http://q37.info/contact/)",
   "description": "Rational number calculator.",
   "main": "RNCq.js",
@@ -9,17 +9,16 @@
   },
   "binary": {
     "module_name": "rncqnjs",
-    "module_path": ".",
-    "remote_path": "./epeios-q37/rncq-node/releases/download/v20170927/",
-    "package_name": "{module_name}-v20170927-{platform}-{arch}.tar.gz",
+    "module_path": "./",
+    "remote_path": "./epeios-q37/rncq-node/releases/download/v20180106/",
+    "package_name": "{module_name}-v20180106-{platform}-{arch}.tar.gz",
     "host": "https://github.com"
   },
   "dependencies": {
-    "njsq": "<=2017.9.27",
-    "node-pre-gyp": "0.6.x"
+   "njsq": "2018.1.5"
   },
   "devDependencies": {
-    "aws-sdk": "2.x"
+
   },
   "scripts": {
     "preinstall": "npm install node-pre-gyp",

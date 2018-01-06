@@ -21,13 +21,12 @@
 
 #include "registry.h"
 
-#include "rncalg.h"
-#include "rncrpn.h"
+#include "rnctol.h"
 
 #include "sclmisc.h"
 #include "sclnjs.h"
 
-void sclnjs::SCLNJSInfo( txf::sOFlow &Flow )
+void sclnjs::SCLNJSInfo( txf::sWFlow &Flow )
 {
 	Flow << NAME_MC << " v" << VERSION << txf::nl
 		 << txf::pad << "Build : " __DATE__ " " __TIME__ " (" << cpe::GetDescription() << ')';
@@ -77,71 +76,6 @@ namespace {
 				}
 			};
 
-			bso::sBool Evaluate_(
-				xtf::sIFlow &XFlow,
-				bso::sBool RPN,
-				txf::sOFlow &OFlow )
-			{
-				bso::sBool Success = false;
-			qRH
-				mthrtn::wRational Number;
-			qRB
-				Number.Init();
-
-			if ( RPN )
-				Success = rncrpn::Evaluate<mthrtn::dRational, mthrtn::wRational, rncrtn::dRationals, rncrtn::wRationals>( XFlow, Number );
-			else
-				Success = rncalg::Evaluate<mthrtn::dRational, mthrtn::wRational, rncrtn::dRationals, rncrtn::wRationals>( XFlow, Number );
-
-				if ( Success ) {
-					Number.Simplify();
-
-					OFlow << Number.N << " / " << Number.D;
-				}
-			qRR
-			qRT
-			qRE
-				return Success;
-			}
-
-			bso::sBool Evaluate_(
-				xtf::sIFlow &XFlow,
-				bso::sBool RPN,
-				str::dString &Result )
-			{
-				bso::sBool Success = false;
-			qRH
-				flx::rStringTOflow OFlow;
-			qRB
-				OFlow.Init( Result );
-
-				Success = Evaluate_( XFlow, RPN, OFlow );
-			qRR
-			qRT
-			qRE
-				return Success;
-			}
-
-			bso::sBool Evaluate_( 
-				str::dString &Expression,
-				bso::sBool RPN,
-				str::dString &Result )
-			{
-				bso::sBool Success = false;
-			qRH
-				flx::sStringIFlow IFlow;
-				xtf::sIFlow XFlow;
-			qRB
-				IFlow.Init( Expression );
-				XFlow.Init( IFlow, utf::f_Guess );
-
-				Success = Evaluate_( XFlow, RPN, Result );
-			qRR
-			qRT
-			qRE
-				return Success;
-			}
-
 			typedef sclnjs::cAsync cAsync_;
 
 			class rRackAsyncCallback_
@@ -151,12 +85,12 @@ namespace {
 			protected:
 				void SCLNJSWork( void ) override
 				{
-					if ( !Evaluate_( Expression, RPN, Result ) )
+					if ( !rnctol::Evaluate( Expression, RPN, Result ) )
 						sclmisc::GetBaseTranslation( "BadExpression", Result );
 				}
 				sclnjs::eBehavior SCLNJSAfter( void ) override
 				{
-					C().Launch( Result );
+					C().VoidLaunch( Result );
 
 					return sclnjs::bExitAndDelete;
 				}
